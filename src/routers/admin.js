@@ -20,14 +20,14 @@ const multer = require('multer')
 const upload = multer({
     fileFilter(req,file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-            return cb(new Error('Please upload image'))
+            return cb(new Error('Please upload image'),null)
         }
 
         cb(null,true)
     }
 })
 
-router.post('/adminSignUp',upload.single('adminImage'),async(req,res)=>{
+router.post('/adminSignUp',upload.single('image'),async(req,res)=>{
     try{
         const admin = new Admin(req.body)
         admin.image = req.file.buffer
@@ -74,6 +74,7 @@ router.delete('/adminDelete',auth.adminAuth,auth.requiresAdmin,async(req,res)=>{
     try{
         const _id = req.admin._id
         const admin = await Admin.findByIdAndDelete(_id)
+        ///// We can remove this condition
         if(!admin){
             return res.status(404).send('Not Found')
         }

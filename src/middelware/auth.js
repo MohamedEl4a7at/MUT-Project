@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const Mom = require('../models/mom')
 const Admin = require('../models/admin')
+const Doctor = require('../models/doctor')
 const momAuth = async(req,res,next)=>{
     try{
     const token = req.header('Authorization').replace('Bearer ','')
@@ -37,8 +38,22 @@ const requiresAdmin = async(req,res,next)=>{
         next()
     }
 }
+
+const doctorAuth = async(req,res,next)=>{
+    try{
+        const token = req.header('Authorization').replace('Bearer ','')
+        const decode = jwt.verify(token,process.env.JWT_SECRET)
+        const doctor = await Doctor.findById({_id:decode._id})
+        req.doctor = doctor
+        next()
+    }
+    catch(e){
+        res.status(401).send({error:'Please Authenticate'})
+    }
+}
 module.exports = { 
     momAuth,
     adminAuth,
-    requiresAdmin
+    requiresAdmin,
+    doctorAuth
 }
