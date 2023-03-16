@@ -8,7 +8,7 @@ const multer = require('multer')
 const upload = multer({
     fileFilter(req,file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-            return cb(new Error('please upload valid image'))
+            return cb(new Error('please upload valid image'),null)
         }
         //accept file
         cb(null,true)

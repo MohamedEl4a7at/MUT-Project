@@ -4,6 +4,7 @@ const validator = require('validator')
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
+
 const doctorSchema = new mongoose.Schema({
     firstName:{
         type:String,
@@ -54,16 +55,16 @@ const doctorSchema = new mongoose.Schema({
             }
         }
     },
-    confirmPassword:{
-        type:String,
-        required:true,
-        minlength:6,
-        validate(value){
-            if(value !== this.password){
-                throw new Error('The password does not match ')
-            }
-        }
-    },
+    // confirmPassword:{
+    //     type:String,
+    //     required:true,
+    //     minlength:6,
+    //     validate(value){
+    //         if(value !== this.password){
+    //             throw new Error('Password does not match ')
+    //         }
+    //     }
+    // },
     image:{
         type:Buffer,
         required:true
@@ -71,6 +72,10 @@ const doctorSchema = new mongoose.Schema({
     professionCertificate:{
         type:Buffer,
         required:true
+    },
+    verified:{
+        type:Boolean,
+        default:false
     }
 })
 
@@ -78,9 +83,9 @@ doctorSchema.plugin(uniqueValidator);   //for duplicated email
 
 
 doctorSchema.pre('save',async function(){
-    if(this.isModified('password'||'confirmPassword')){
+    if(this.isModified('password')){
         this.password = await bcryptjs.hash(this.password,8)
-        this.confirmPassword = await bcryptjs.hash(this.confirmPassword,8)
+        // this.confirmPassword = await bcryptjs.hash(this.confirmPassword,8)
     }
 })
 
