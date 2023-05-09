@@ -78,8 +78,17 @@ const momSchema = new mongoose.Schema({
     verified:{
         type:Boolean,
         default:false
+    },
+    followers:{
+        type:Array,
+        default:[]
+    },
+    followings:{
+        type:Array,
+        default:[]
     }
-})
+},
+{timestamps:true})
 
 momSchema.pre('save',async function(){
     if(this.isModified('password')){
@@ -131,9 +140,9 @@ momSchema.methods.generateToken = function(){
 momSchema.methods.toJSON = function(){
     const momObject = this.toObject()
     delete momObject.password
-    delete momObject.confirmPassword
-    delete momObject.secretQuestion
-    delete momObject.secretAnswer
+    // delete momObject.confirmPassword
+    // delete momObject.secretQuestion
+    // delete momObject.secretAnswer
     return momObject
 }
 

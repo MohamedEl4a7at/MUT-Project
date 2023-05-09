@@ -3,7 +3,7 @@ const uniqueValidator = require('mongoose-unique-validator') // for duplicated e
 const validator = require('validator')
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-
+const moment = require('moment')
 
 const doctorSchema = new mongoose.Schema({
     firstName:{
@@ -18,6 +18,9 @@ const doctorSchema = new mongoose.Schema({
         trim:true,
         minLength:3
     },
+    fullName: { type: String, default: function() {
+        return `${this.firstName} ${this.lastName}`;
+    }},
     dateOfBirth:{
         type:Date,
         required:true,
@@ -76,8 +79,37 @@ const doctorSchema = new mongoose.Schema({
     verified:{
         type:Boolean,
         default:false
-    }
-})
+    },
+    followers:{
+        type:Array,
+        default:[]
+    },
+    followings:{
+        type:Array,
+        default:[]
+    },
+    // availableAppointments:[
+    //     {
+    //         date:{
+    //             type:Date
+    //         },
+    //         reserved:{
+    //             type:Boolean,
+    //             default:false
+    //         }
+    //     } 
+    // ]
+    //    reserved:{type:Boolean,default:false}
+            // get: function(date) {
+            //     return moment(date).format('YYYY-MM-DD HH:mm');
+            //   },
+            //   set: function(date) {
+            //     return moment(date).toDate();
+            //   }
+            
+        //    reserved:{type:Boolean,default:false}
+},
+{timestamps:true})
 
 doctorSchema.plugin(uniqueValidator);   //for duplicated email
 
@@ -108,6 +140,14 @@ doctorSchema.methods.generateToken = function(){
     return token
 }
 
+doctorSchema.methods.addAppointment = function(data){
+    this.availableAppointments.push(...data)
+    return this
+}
+
+// doctorSchema.methods.formatDate = function () {
+//     return moment(this.availableAppointments).format('YYYY/MM/DD');
+//   };
 
 doctorSchema.methods.toJSON = function(){
     const doctorObject = this.toObject()
@@ -116,7 +156,21 @@ doctorSchema.methods.toJSON = function(){
     return doctorObject
 }
 
+doctorSchema.virtual('appointments',{
+    localField:'_id',
+    foreignField:'doctor',
+    ref:'Appointment'
+})
 
-
+doctorSchema.virtual('freeAppointments',{
+    localField:'_id',
+    foreignField:'doctor',
+    ref:'availableAppointment'
+})
+doctorSchema.virtual('articles',{
+    localField:'_id',
+    foreignField:'auther',
+    ref:'Articles'
+})
 const Doctor = mongoose.model('Doctor',doctorSchema)
 module.exports = Doctor

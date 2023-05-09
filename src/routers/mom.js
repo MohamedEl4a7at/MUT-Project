@@ -6,6 +6,7 @@
     const Token = require('../models/token')
     const sendEmail = require('../utils/sendEmail')
     const crypto = require('crypto')
+    const Doctor = require('../models/doctor')
     // const Joi = require('joi')
 
     /////////////////////signup with Email Verification
@@ -32,7 +33,7 @@
             
         }}
         catch(e){
-            // console.log('wrong')
+            console.log(e.message)
             res.status(400).send(e.message)
         }
     })
@@ -49,12 +50,13 @@
             });
             if(!token) return res.status(400).send({message:"Invalid Link Or Expired"});
 
-            await Mom.updateOne({_id:mom._id,verified:true});
+            await Mom.updateOne({_id:mom._id},{ $set :{"verified":true}});
             await token.remove()
 
             res.status(200).send({message:"Email verified successfully"})
         } catch(error){
-            res.status(500).send({message:"Internal Server Error"})
+            res.status(500).send({message:"Internal Server Error",error})
+            console.log(error)
         }
     })
 
@@ -105,9 +107,9 @@
                         userId:mom._id,
                         token:crypto.randomBytes(32).toString("hex")
                     }).save();
-                    const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${verifyToken.token}`
-                    await sendEmail(mom.email,"Verify Email",url)
                 }
+                const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${verifyToken.token}`
+                await sendEmail(mom.email,"Verify Email",url)
                 res.status(400).send({message:"An Email sent to your account please verify"});
             }else{
             const token = mom.generateToken()
@@ -219,6 +221,46 @@ router.post('/password-reset/:momId/:token',async(req,res)=>{
     catch(e){
         res.status(400).send('An error occured!')
         console.log(e)
+    }
+})
+/////////////////////////////////////////////////////follow
+router.put('/momFollow/:id',auth.momAuth,async(req,res)=>{
+    if(req.mom._id !== req.params.id){
+        try{
+            const user = await Doctor.findById(req.params.id)
+            if(!user.followers.includes(req.mom._id)){
+                await user.updateOne({ $push: { followers:req.mom._id}});
+                await req.mom.updateOne({ $push: { followings:req.params.id}});
+                res.status(200).json("user has been followed")
+            }
+            else{
+                res.status(403).json("you already follow this Doctor")
+            }
+        }catch(err){
+            res.status(500).json(err);
+        }
+    }else{
+        res.status(403).json("you can't follow yourself");
+    }
+})
+//////////////////////////////////////////////////Unfollow
+router.put('/momUnfollow/:id',auth.momAuth,async(req,res)=>{
+    if(req.mom._id !== req.params.id){
+        try{
+            const user = await Doctor.findById(req.params.id)
+            if(user.followers.includes(req.mom._id)){
+                await user.updateOne({ $pull: { followers:req.mom._id}});
+                await req.mom.updateOne({ $pull: { followings:req.params.id}});
+                res.status(200).json("user has been unfollowed")
+            }
+            else{
+                res.status(403).json("This user is not followed")
+            }
+        }catch(err){
+            res.status(500).json(err);
+        }
+    }else{
+        res.status(403).json("you can't unfollow yourself");
     }
 })
 module.exports = router

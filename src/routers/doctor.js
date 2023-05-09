@@ -95,22 +95,29 @@ router.post('/doctorData',auth.doctorAuth,async(req,res)=>{
 // })
 
 ///login
-// router.post('/doctorLogin',async(req,res)=>{
-//     try{
-//         const doctor = await Doctor.findByCredentials(req.body.email,req.body.password)
-//         if(!doctor.verified){
-//             const verifyToken = await Token.findOne({userId:doctor._id});
-//             if(!verifyToken){
-//                 verifyToken = aw
-//             }
-//         }
-//         const token = doctor.generateToken()
-//         res.status(200).send({doctor,token})
-//     }
-//     catch(e){
-//         res.status(400).send(e.message)
-//     }
-// })
+router.post('/doctorLogin',async(req,res)=>{
+    try{
+        const doctor = await Doctor.findByCredentials(req.body.email,req.body.password)
+        if(!doctor.verified){
+            let verifyToken = await Token.findOne({userId:doctor._id})
+            if(!verifyToken){
+                verifyToken = await new Token({
+                    userId:doctor._id,
+                    token:crypto.randomBytes(32).toString("hex")
+                }).save()
+            }
+            const url = `${process.env.BASE_URL}/doctors/${doctor._id}/verify/${verifyToken.token}`
+            await sendEmail(doctor.email,"Verify Email",url)
+            res.status(200).send({message:"An Email sent to your account please verify",doctor})
+        }else{
+        const token = doctor.generateToken()
+        res.status(200).send({doctor,token})
+        }
+    }
+    catch(e){
+        res.status(400).send(e.message)
+    }
+})
 
 ////////profile
 router.get('/doctorProfile',auth.doctorAuth,(req,res)=>{
@@ -153,4 +160,83 @@ router.delete('/doctorProfile',auth.doctorAuth,async(req,res)=>{
         res.status(400).send(e.message)
     }
 })
+
+// add free appointments
+// router.post('/freeAppointments',auth.doctorAuth,async(req,res)=>{
+//     try{
+//     const doctor = await Doctor.findById(req.doctor._id);
+//     // await doctor.updateOne({$push: {availableAppointments: req.body.freeAppointments}});
+//     await doctor.addAppointment(req.body.freeAppointments)
+//     // await doctor.find({ "availableAppointments": "2023-05-06 5:00" }, (err, docs) => {
+//     //     if (err) {
+//     //       console.error(err);
+//     //     } else {
+//     //       console.log(docs);
+//     //     }
+//     //   });
+//     await doctor.save();
+//     res.status(200).send(doctor)
+//     }
+//     catch(e){
+//         res.status(400).send(e)
+//     }
+// })
+// update appointments
+// router.patch('/updateAppointments',auth.doctorAuth,async(req,res)=>{
+//     const doctor = await Doctor.findById(req.doctor._id);
+//     const updates = req.body.date
+//     doctor.availableAppointments.forEach((el)=>doctor.availableAppointments[el])
+
+    
+// })
+
+//delete appointments
+// get all 
+// router.get('/allAppointments',auth.doctorAuth,async(req,res)=>{
+//     try{
+//         const doctor = await Doctor.findById(req.doctor._id);
+//         res.status(200).send(doctor.availableAppointments)
+//         // console.log(doctor.availableAppointments[0])
+//     }
+//     catch(e){
+//         res.status(400).send(e)
+//     }
+
+// })
+// router.patch('/updateAppointment',auth.doctorAuth,async(req,res)=>{
+//     try{
+//         const doctor = await Doctor.findOneAndUpdate({"availableAppointments._id":req.body._id},{
+//             "$set":{
+//                 "availableAppointments.$.date":req.body.date
+//             }
+//         },{new:true});
+//         // // console.log(availableApp)
+//         await doctor.save()
+//     //    const dd =  doctor.forEach((el)=>{el.find(_id = req.body._id)})
+//     //    doctor.find().forEach( function(myDoc) { print( "user: " + myDoc.name ); } );
+//         // const index = await Doctor.find({ $indexOfArray: ['$availableAppointments', req.body._id] !== -1 });
+//         // await Doctor.findOne({ "availableAppointments._id":req.body._id }, (err, doctor) => {
+//         //     if (err) {
+//         //       console.log(err);
+//         //     } else {
+//         //         // console.log(doctor)
+//         //       doctor.availableAppointments.forEach((appointment) => {
+//         //         if(appointment._id == req.body._id){
+//         //             if(appointment.reserved){
+//         //                 console.log(appointment)
+//         //             }
+//         //         }
+//         //       });
+//         //     }
+//         //   });
+          
+
+//         // console.log(dd)
+//         // console.log(doctor.availableAppointments[0])
+//         res.status(200).send(doctor)
+//     }
+//     catch(err){
+//         res.status(400).send(err)
+//     }
+// })
 module.exports = router

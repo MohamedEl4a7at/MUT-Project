@@ -60,7 +60,8 @@ const adminSchema = new mongoose.Schema({
         type:String,
         enum:['user','admin']
     }
-})
+},
+{timestamps:true})
 
 adminSchema.plugin(uniqueValidator);  ///for duplicate email 
 
