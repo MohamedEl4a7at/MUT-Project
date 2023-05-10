@@ -40,7 +40,7 @@ router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res
 router.get('/showArticles',async(req,res)=>{
     try{
         const articles = await Articles.find({}) 
-        res.status(200).send(articles)
+        res.status(200).send([articles[0],articles[1],articles[2]])
     }
     catch(err){
         res.status(400).send(err)
