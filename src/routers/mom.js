@@ -263,4 +263,5 @@ router.put('/momUnfollow/:id',auth.momAuth,async(req,res)=>{
         res.status(403).json("you can't unfollow yourself");
     }
 })
+/////////////////////////////////////////////////////add score
 module.exports = router
