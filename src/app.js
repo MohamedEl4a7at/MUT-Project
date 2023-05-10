@@ -1,10 +1,12 @@
 const express = require('express')
 const app = express()
+const cors = require('cors')
 // const moment = require('moment');
 require('dotenv').config()
 const port = process.env.PORT
 require('./db/mongoose')
 app.use(express.json())
+app.use(cors())
 const momRouter = require('./routers/mom')
 const articlesRouter = require('./routers/articles')
 const adminRouter = require('./routers/admin')
