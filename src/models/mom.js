@@ -86,6 +86,10 @@ const momSchema = new mongoose.Schema({
     followings:{
         type:Array,
         default:[]
+    },
+    score:{
+        type:Number,
+        default:0
     }
 },
 {timestamps:true})

@@ -36,8 +36,8 @@ router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res
 //         res.status(400).send(err)
 //     }
 // })
-////////////////////////get all to mom
-router.get('/showArticles',auth.momAuth,async(req,res)=>{
+////////////////////////get all to main page
+router.get('/showArticles',async(req,res)=>{
     try{
         const articles = await Articles.find({}) 
         res.status(200).send(articles)
