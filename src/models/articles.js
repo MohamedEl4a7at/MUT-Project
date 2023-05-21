@@ -15,15 +15,15 @@ const articlesSchema = new mongoose.Schema({
         trim:true
     },
     image:{
-        type:Buffer
+        type:String
     }
 },
 {timestamps:true})
 
-articlesSchema.methods.toJSON = function(){
-    const articlesObject = this.toObject()
-    return articlesObject
-}
+// articlesSchema.methods.toJSON = function(){
+//     const articlesObject = this.toObject()
+//     return articlesObject
+// }
 const Articles = mongoose.model('Articles',articlesSchema)
 
 module.exports = Articles

@@ -5,20 +5,29 @@ const auth = require('../middelware/auth')
 const multer = require('multer')
 
 /////////////////////////upload with image
-const upload = multer({
+const storage = multer.diskStorage({
+    destination:  (req, file, cb)=> {
+      cb(null, 'uploads/')
+    },
+    filename:  (req, file, cb)=> {
+      cb(null, Date.now() + '-' + file.originalname)
+    }
+  })
+  
+  const upload = multer({
     fileFilter(req,file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-            return cb(new Error('please upload valid image'),null)
+            return cb(new Error('Please upload a valid image'),null)
         }
         //accept file
         cb(null,true)
     }
-})
+, storage: storage })
 
 router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res)=>{
     try{
         const articles = new Articles({...req.body,auther:req.doctor._id})
-        articles.image = req.file.buffer
+        articles.image = req.file.path
         await articles.save()
         res.status(200).send(articles)
     }
