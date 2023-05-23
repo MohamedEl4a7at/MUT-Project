@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const path = require('path')
 // const moment = require('moment');
 require('dotenv').config()
 const port = process.env.PORT
@@ -16,6 +17,7 @@ const Appointment = require('./routers/momAppointment')
 const availableAppointment = require('./routers/doctorAvailableAppointments')
 const surveyRouter = require('./routers/survey')
 const Contact = require('./routers/contactUs')
+app.use('/uploads',express.static('uploads'));
 app.use(momRouter)
 app.use(articlesRouter)
 app.use(adminRouter)
@@ -25,6 +27,6 @@ app.use(Appointment)
 app.use(availableAppointment)
 app.use(surveyRouter)
 app.use(Contact)
-app.listen(port,()=>{
+app.listen(3000,()=>{
     console.log('Server is running')
 })

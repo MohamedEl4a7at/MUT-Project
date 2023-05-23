@@ -7,7 +7,7 @@ const multer = require('multer')
 /////////////////////////upload with image
 const storage = multer.diskStorage({
     destination:  (req, file, cb)=> {
-      cb(null, './uploads/')
+      cb(null, 'uploads/')
     },
     filename:  (req, file, cb)=> {
       cb(null, Date.now() + '-' + file.originalname)
@@ -28,6 +28,7 @@ router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res
     try{
         const articles = new Articles({...req.body,auther:req.doctor._id})
         articles.image = req.file.path
+        console.log(req.file)
         await articles.save()
         res.status(200).send(articles)
     }
