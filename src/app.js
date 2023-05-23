@@ -27,6 +27,6 @@ app.use(Appointment)
 app.use(availableAppointment)
 app.use(surveyRouter)
 app.use(Contact)
-app.listen(3000,()=>{
+app.listen(port,()=>{
     console.log('Server is running')
 })
