@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res)=>{
     try{
         const articles = new Articles({...req.body,auther:req.doctor._id})
-        articles.image = req.file.path
+        articles.image = "https://mut-project.onrender.com/" + req.file.path
         await articles.save()
         res.status(200).send(articles)
     }
