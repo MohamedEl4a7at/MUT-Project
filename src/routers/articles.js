@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Articles = require('../models/articles')
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const multer = require('multer')
 
 /////////////////////////upload with image
@@ -49,7 +49,7 @@ router.post('/postArticles',auth.doctorAuth,upload.single('image'),async(req,res
 router.get('/showArticles',async(req,res)=>{
     try{
         const articles = await Articles.find({}) 
-        res.status(200).send([articles[0],articles[1],articles[2]])
+        res.status(200).send([articles[0],articles[1],articles[2],articles[3]])
     }
     catch(err){
         res.status(400).send(err)

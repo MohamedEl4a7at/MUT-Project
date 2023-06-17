@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Admin = require('../models/admin')
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const multer = require('multer')
 /////////////////////signup
 ///////////////////without image

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Doctor = require('../models/doctor')
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const availableAppointment = require('../models/doctorAvailableAppointments')
 
 router.post('/freeAppointments',auth.doctorAuth,async(req,res)=>{

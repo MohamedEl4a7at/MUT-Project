@@ -69,11 +69,11 @@ const doctorSchema = new mongoose.Schema({
     //     }
     // },
     image:{
-        type:Buffer,
+        type:String,
         required:true
     },
     professionCertificate:{
-        type:Buffer,
+        type:String,
         required:true
     },
     verified:{

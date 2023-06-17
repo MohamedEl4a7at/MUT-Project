@@ -2,15 +2,14 @@ const express = require('express')
 const router = express.Router()
 const Appointment = require('../models/momAppointment')
 const Doctor = require('../models/doctor')
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const doctorAvailableAppointment = require("../models/doctorAvailableAppointments")
+// const Mom = require('../models/mom')
 // find by name even if it's first name
 router.get('/getAllDoctors',auth.momAuth,async(req,res)=>{
     try{
         const regex = new RegExp(req.body.name, "i"); // Create a case-insensitive regular expression
         const results = await Doctor.find({ fullName: { $regex: regex } });
-        // const doctors = await Doctor.find({fullName:req.body.name})
-        console.log(results)
         res.send(results)
     }
     catch(err){
@@ -25,9 +24,6 @@ router.get('/doctorAppointments/:id',auth.momAuth,async(req,res)=>{
             return res.status(404).send({message:'Doctor not found'})
         }else{
             const appointments = await doctorAvailableAppointment.find({doctor:req.params.id,reserved:false})
-            // const appointment = new Appointment({...req.body,patient:req.mom._id})
-            //  await appointment.save()
-            //  res.status(200).send(appointment)
             res.status(200).send(appointments)
         }
         
@@ -76,4 +72,22 @@ router.delete('/deleteSession/:id',auth.momAuth,async(req,res)=>{
         res.status(400).send({message:err.message})
     }
 })
+// get all reserved appointment for doctor
+// router.get('/getReservedAppointments',auth.doctorAuth,async(req,res)=>{
+//     try{
+//         const appointments = await Appointment.find({doctor:{$in:req.doctor._id}}).populate('patient','fullName')
+//         res.send(appointments)
+//         console.log(appointments)
+//        appointments.forEach(el => {
+//             console.log(el)
+//             clients = [el.patient]
+//             clients.push(el.patient)
+//             console.log(clients)
+//         })
+//         res.status(200).send(clients.patient)
+//         console.log(clients)
+//     } catch(err){
+//         res.status(400).send({message:err.message})
+//     }    
+// })
 module.exports = router

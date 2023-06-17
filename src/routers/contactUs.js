@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const Contact = require('../models/contactUs')
 
 router.post('/contactUs',auth.momAuth,async(req,res)=>{

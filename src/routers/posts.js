@@ -1,24 +1,33 @@
 const router = require('express').Router();
 const multer = require('multer');
-const auth = require('../middelware/auth');
+const auth = require('../middleware/auth');
 const Post = require('../models/posts');
 
-const upload = multer({
+const storage = multer.diskStorage({
+    destination:  (req, file, cb)=> {
+      cb(null, 'uploads/')
+    },
+    filename:  (req, file, cb)=> {
+      cb(null, Date.now() + '-' + file.originalname)
+    }
+  })
+  
+  const upload = multer({
     fileFilter(req,file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-            return cb(new Error('please upload valid image'),null)
+            return cb(new Error('Please upload a valid image'),null)
         }
         //accept file
         cb(null,true)
     }
-})
+, storage: storage })
 
 // create a post
 router.post("/createPost",auth.momAuth,upload.single('image'),async(req,res)=>{
     try{
         const newPost = new Post ({...req.body,userId:req.mom._id})
         if(req.file){
-            newPost.image = req.file.buffer;
+            newPost.image = "https://mut-project.onrender.com/" + req.file.path;
         };
         await newPost.save()
         res.status(200).send(newPost)
@@ -38,13 +47,13 @@ router.patch('/updatePost/:id',auth.momAuth,upload.single('image'),async(req,res
             const updates = Object.keys(req.body)
             updates.forEach((el)=>{post[el] = req.body[el]})
             if(req.file){
-                post.image = req.file.buffer
+                post.image = "https://mut-project.onrender.com/" + req.file.path;
             }
             await post.save()
             res.status(200).send(post)
         }
     }catch(err){
-        res.status(500).send(err)
+        res.status(500).send(err.message)
     }
 })
 //delete a post

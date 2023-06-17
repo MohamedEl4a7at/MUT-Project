@@ -16,6 +16,9 @@ const momSchema = new mongoose.Schema({
         trim:true,
         minLength:3
     },
+    fullName: { type: String, default: function() {
+        return `${this.firstName} ${this.lastName}`;
+    }},
     dateOfBirth:{
         type:Date,
         required:true,
@@ -61,7 +64,8 @@ const momSchema = new mongoose.Schema({
     //     }
     // },
     image:{
-        type:Buffer
+        type:String,
+        default:null
     },
     // secretQuestion:{
     //     type:String,

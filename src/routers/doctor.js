@@ -1,20 +1,30 @@
 const express = require('express')
 const router = express.Router()
 const Doctor = require('../models/doctor')
-const auth = require('../middelware/auth')
+const auth = require('../middleware/auth')
 const multer = require('multer')
-const Token = require('../models/token')
+const OTP = require('../models/otp')
 const sendEmail = require('../utils/sendEmail')
-const crypto = require('crypto')
-const upload = multer({
+// const crypto = require('crypto')
+const randomstring = require('randomstring');
+const storage = multer.diskStorage({
+    destination:  (req, file, cb)=> {
+      cb(null, 'uploads/')
+    },
+    filename:  (req, file, cb)=> {
+      cb(null, Date.now() + '-' + file.originalname)
+    }
+  })
+  
+  const upload = multer({
     fileFilter(req,file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-            return cb(new Error('Please upload image'),null)
+            return cb(new Error('Please upload a valid image'),null)
         }
-
+        //accept file
         cb(null,true)
     }
-})
+, storage: storage })
 // upload 2 photos with 2 different property (image,certificate) 
 // we use array for multi photos for seme property
 /////////////////////////signUp with Email verification
@@ -31,16 +41,19 @@ router.post('/doctorSignUp',cpUpload,async(req,res)=>{
         if(req.body.password !== req.body.confirmPassword){
             throw new Error('password does not match')
         }else{
-         doctor.image = req.files['image'][0].buffer
-         doctor.professionCertificate = req.files['professionCertificate'][0].buffer
+         doctor.image = "https://mut-project.onrender.com/" + req.files['image'][0].path
+         doctor.professionCertificate = "https://mut-project.onrender.com/" + req.files['professionCertificate'][0].path
         await doctor.save()
         }
-        const token = await new Token({
+        const otp = await new OTP({
             userId:doctor._id,
-            token:crypto.randomBytes(32).toString("hex")
+            otp:randomstring.generate({
+                length: 4,
+                charset: 'numeric'
+              })
         }).save();
-        const url = `${process.env.BASE_URL}/doctors/${doctor._id}/verify/${token.token}`
-        await sendEmail(doctor.email,"Verify Email",url)
+        // const url = `${process.env.BASE_URL}/doctors/${doctor._id}/verify/${token.token}`
+        await sendEmail(doctor.email,"Verify Email",`Your verification OTP is: ${otp.otp}`)
         res.status(200).send({message:"An Email sent to your account please verify",doctor})
     }}
     catch(e){
@@ -48,19 +61,19 @@ router.post('/doctorSignUp',cpUpload,async(req,res)=>{
     }
 })
 /////////////////////Verify token
-router.get('/doctors/:id/verify/:token',async(req,res)=>{
+router.post('/doctors/:id/verify',async(req,res)=>{
     try{
         const doctor = await Doctor.findById(req.params.id);
-        if(!doctor) return res.status(400).send({message:"Invalid Link Or Expired"});
+        if(!doctor) return res.status(400).send({message:"User Not Found"});
 
-        const token = await Token.findOne({
+        const otp = await OTP.findOne({
             userId:doctor._id,
-            tokrn:req.params.token
+            otp:req.body.otp
         })
-        if(!token) return res.status(400).send("Invalid Link Or Expired");
+        if(!otp) return res.status(400).send("Invalid OTP Or Expired");
         
         await Doctor.updateOne({_id:doctor._id,verified:true});
-        await token.remove()
+        await otp.remove()
 
         res.status(200).send({message:"Email verified successfully"});
     }
@@ -99,15 +112,18 @@ router.post('/doctorLogin',async(req,res)=>{
     try{
         const doctor = await Doctor.findByCredentials(req.body.email,req.body.password)
         if(!doctor.verified){
-            let verifyToken = await Token.findOne({userId:doctor._id})
-            if(!verifyToken){
-                verifyToken = await new Token({
+            let verifyOtp = await OTP.findOne({userId:doctor._id})
+            if(!verifyOtp){
+                verifyOtp = await new OTP({
                     userId:doctor._id,
-                    token:crypto.randomBytes(32).toString("hex")
+                    otp:randomstring.generate({
+                        length: 4,
+                        charset: 'numeric'
+                      })
                 }).save()
             }
-            const url = `${process.env.BASE_URL}/doctors/${doctor._id}/verify/${verifyToken.token}`
-            await sendEmail(doctor.email,"Verify Email",url)
+            // const url = `${process.env.BASE_URL}/doctors/${doctor._id}/verify/${verifyToken.token}`
+            await sendEmail(doctor.email,"Verify Email",`Your verification OTP is: ${verifyOtp.otp}`)
             res.status(200).send({message:"An Email sent to your account please verify",doctor})
         }else{
         const token = doctor.generateToken()
@@ -130,12 +146,12 @@ router.patch('/doctorProfile',auth.doctorAuth,cpUpload,async(req,res)=>{
     try{
         updates.forEach((el)=>req.doctor[el] = req.body[el])
         if(req.files['image'] && !req.files['professionCertificate']){
-            req.doctor.image = req.files['image'][0].buffer
+            req.doctor.image = "https://mut-project.onrender.com/" + req.files['image'][0].path
         }else if(!req.files['image'] && req.files['professionCertificate'] ){
-            req.doctor.professionCertificate = req.files['professionCertificate'][0].buffer
+            req.doctor.professionCertificate = "https://mut-project.onrender.com/" + req.files['professionCertificate'][0].path
         }else if(req.files['image'] && req.files['professionCertificate']){
-            req.doctor.image = req.files['image'][0].buffer
-            req.doctor.professionCertificate = req.files['professionCertificate'][0].buffer
+            req.doctor.image = "https://mut-project.onrender.com/" + req.files['image'][0].path
+            req.doctor.professionCertificate = "https://mut-project.onrender.com/" + req.files['professionCertificate'][0].path
         }
         await req.doctor.save()
         res.status(200).send(req.doctor)

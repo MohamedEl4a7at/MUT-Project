@@ -1,12 +1,13 @@
     const express = require('express')
     const router = express.Router()
     const Mom = require('../models/mom')
-    const auth = require('../middelware/auth')
+    const auth = require('../middleware/auth')
     const multer = require('multer')
-    const Token = require('../models/token')
+    const OTP = require('../models/otp')
     const sendEmail = require('../utils/sendEmail')
-    const crypto = require('crypto')
+    // const crypto = require('crypto')
     const Doctor = require('../models/doctor')
+    const randomstring = require('randomstring');
     // const Joi = require('joi')
 
     /////////////////////signup with Email Verification
@@ -22,13 +23,20 @@
             }else{
             await mom.save();
             }
-            const token = await new Token({
+            // const otp = randomstring.generate({
+            //     length: 4,
+            //     charset: 'numeric'
+            //   });
+            const otp = await new OTP({
                 userId:mom._id,
-                token:crypto.randomBytes(32).toString("hex")
+                otp:randomstring.generate({
+                    length: 4,
+                    charset: 'numeric'
+                  })
             }).save();
 
-            const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${token.token}`
-            await sendEmail(mom.email,"Verify Email",url)
+            // const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${token.token}`
+            await sendEmail(mom.email,"Verify Email",`Your verification OTP is: ${otp.otp}`)
             res.status(200).send({message:"An Email sent to your account please verify",mom})
             
         }}
@@ -37,20 +45,20 @@
         }
     })
 
-    /////////////////////////////////Verify token
-    router.get('/users/:id/verify/:token',async(req,res)=>{
+    /////////////////////////////////Verify OTP
+    router.post('/users/:id/verify',async(req,res)=>{
         try{
             const mom = await Mom.findById(req.params.id);
-            if(!mom) return res.status(400).send({message:"Invalid Link Or Expired"});
+            if(!mom) return res.status(400).send({message:"User Not Found"});
 
-            const token = await Token.findOne({
+            const otp = await OTP.findOne({
                 userId:mom._id,
-                token:req.params.token
+                otp:req.body.otp
             });
-            if(!token) return res.status(400).send({message:"Invalid Link Or Expired"});
+            if(!otp) return res.status(400).send({message:"Invalid OTP Or Expired"});
 
             await Mom.updateOne({_id:mom._id},{ $set :{"verified":true}});
-            await token.remove()
+            await otp.remove()
 
             res.status(200).send({message:"Email verified successfully"})
         } catch(error){
@@ -60,15 +68,24 @@
     })
 
     //////////////////////////////// add photo
-    const upload = multer({
+    const storage = multer.diskStorage({
+        destination:  (req, file, cb)=> {
+          cb(null, 'uploads/')
+        },
+        filename:  (req, file, cb)=> {
+          cb(null, Date.now() + '-' + file.originalname)
+        }
+      })
+      
+      const upload = multer({
         fileFilter(req,file,cb){
             if(!file.originalname.match(/\.(jpg|jpeg|png|jfif)$/)){
-                return cb(new Error('Please upload image'),null)
+                return cb(new Error('Please upload a valid image'),null)
             }
-
+            //accept file
             cb(null,true)
         }
-    })
+    , storage: storage })
 
     // router.post('/momSignUp',upload.single('image'),async(req,res)=>{
     //     try{
@@ -83,11 +100,9 @@
     //     }
     // })
 
-    router.patch('/momData',auth.momAuth,upload.single('image'),async(req,res)=>{
+    router.patch('/momImage',auth.momAuth,upload.single('image'),async(req,res)=>{
         try{
-            // const data = Object.keys(req.body)
-            // data.forEach((el)=>req.mom[el] = req.body[el])
-            req.mom.image = req.file.buffer
+            req.mom.image = "https://mut-project.onrender.com/" + req.file.path
             await req.mom.save()
             res.status(200).send(req.mom)
         }
@@ -100,15 +115,18 @@
         try{
             const mom = await Mom.findByCredentials(req.body.email,req.body.password)
             if(!mom.verified){
-                let verifyToken = await Token.findOne({userId:mom._id});
-                if(!verifyToken){
-                    verifyToken = await new Token({
+                let verifyOtp = await OTP.findOne({userId:mom._id});
+                if(!verifyOtp){
+                    verifyOtp = await new OTP({
                         userId:mom._id,
-                        token:crypto.randomBytes(32).toString("hex")
+                        otp:randomstring.generate({
+                            length: 4,
+                            charset:'numeric'
+                        })
                     }).save();
                 }
-                const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${verifyToken.token}`
-                await sendEmail(mom.email,"Verify Email",url)
+                // const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${verifyToken.token}`
+                await sendEmail(mom.email,"Verify Email",`Your verification OTP is: ${verifyOtp.otp}`)
                 res.status(400).send({message:"An Email sent to your account please verify"});
             }else{
             const token = mom.generateToken()
@@ -132,10 +150,10 @@ router.patch('/profile',auth.momAuth,upload.single('image'),async(req,res)=>{
     try{
     updates.forEach((el)=>{
         req.mom[el] = req.body[el] 
-        if(req.file){
-        req.mom.image = req.file.buffer
-        }
     })
+    if(req.file){
+        req.mom.image = "https://mut-project.onrender.com/" + req.file.path
+        };
     await req.mom.save()
     res.status(200).send(req.mom)
 }
@@ -176,50 +194,61 @@ router.post('/resetPassword',async(req,res)=>{
         const mom = await Mom.findOne({email:req.body.email})
         if(!mom){
             return res.status(400).send("Email Not Found")
-        } 
-        let token = await Token.findOne({userId:mom._id})
-        if(!token){
-            // console.log(mom)
-             token = await new Token({
-                userId:mom._id,
-                token:crypto.randomBytes(30).toString("hex")
-            }).save();
+        }else{
+            if(!mom.verified){
+                return res.status(400).send("Email Not Verified Please Verify")
+            }else{
+                let otp = await OTP.findOne({userId:mom._id})
+                if(!otp){
+                    // console.log(mom)
+                     otp = await new OTP({
+                        userId:mom._id,
+                        otp:randomstring.generate({
+                            length: 4,
+                            charset:'numeric'
+                        })
+                    }).save();
+                }
+                // const link = `${process.env.BASE_URL}/password-reset/${mom._id}/${token.token}`;
+                await sendEmail(mom.email,"password reset",`Your verification OTP is: ${otp.otp}`);
+                res.send('password reset otp sent to your email account please verify')
+            }
         }
-        const link = `${process.env.BASE_URL}/password-reset/${mom._id}/${token.token}`;
-        await sendEmail(mom.email,"password reset",link);
-        res.send('password reset link sent to your email account')
     }
     catch(e){
-        res.send('An error occured');
-        console.log(e)
+        res.status(400).send(e.message);
+        // console.log(e)
     }
 
 })
 ////////////////////////////////////////////////
-router.post('/password-reset/:momId/:token',async(req,res)=>{
+router.post('/password-reset/:id',async(req,res)=>{
     try{
-        const mom = await Mom.findById(req.params.momId);
+        const mom = await Mom.findById(req.params.id);
         if(!mom){
-          return res.status(400).send('Invalid Link Or Expired')
+          return res.status(400).send('User Not Found')
         }
-
-        const token = await Token.findOne({
-            userId : mom._id,
-            token : req.params.token
-        });
-        if(!token){
-            return res.status(400).send('Invalid Link Or Expired')
+        else{
+            const otp = await OTP.findOne({
+                userId : mom._id,
+                otp : req.body.otp
+            });
+            if(!otp){
+                return res.status(400).send('Invalid OTP Or Expired')
+            }
+            else{
+                mom.password = req.body.password;
+                await mom.save();
+                await otp.delete();
+        
+                res.status(200).send('password reset sucessfully.')
+            }
+    
         }
-
-        mom.password = req.body.password;
-        await mom.save();
-        await token.delete();
-
-        res.send('password reset sucessfully.')
     }
     catch(e){
-        res.status(400).send('An error occured!')
-        console.log(e)
+        res.status(400).send(e.message)
+        // console.log(e)
     }
 })
 /////////////////////////////////////////////////////follow

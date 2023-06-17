@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
-const tokenSchema = new mongoose.Schema({
+const otpSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
-    token: {
+    otp: {
         type: String,
         required: true,
     },
@@ -13,7 +13,8 @@ const tokenSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
         expires: 3600,
-    },
-});
+    }
+},
+{timestamps:true});
 
-module.exports = mongoose.model("Token", tokenSchema);
+module.exports = mongoose.model("OTP", otpSchema);
