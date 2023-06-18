@@ -52,7 +52,7 @@ router.post('/reserve/:id',auth.momAuth,async(req,res)=>{
             }
         }
     }catch(err){
-        res.status(400).send({message:err.message})
+        res.status(500).send({message:err.message})
     }
 })
 //delete appointment
@@ -69,7 +69,7 @@ router.delete('/deleteSession/:id',auth.momAuth,async(req,res)=>{
             res.status(200).send({message:"Appointment Deleted Successfully"})
         }
     }catch(err){
-        res.status(400).send({message:err.message})
+        res.status(500).send({message:err.message})
     }
 })
 // get all reserved appointment for doctor

@@ -41,7 +41,7 @@
             
         }}
         catch(e){
-            res.status(400).send(e)
+            res.status(500).send({"message":e.message})
         }
     })
 
@@ -134,7 +134,7 @@
             }
         }
         catch(e){
-            res.status(400).send(e.message)
+            res.status(500).send({"message":e.message})
         }
     })
 
