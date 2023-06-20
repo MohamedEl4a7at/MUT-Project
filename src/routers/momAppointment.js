@@ -12,7 +12,7 @@ router.get('/getAllDoctors',auth.momAuth,async(req,res)=>{
         const searchTerm = req.body.name;
         const results = await Doctor.find({ fullName: { $regex: `${searchTerm}`, $options: 'i' } });
         if(results.length == 0){
-            res.status(404).send('Not Found')
+            res.status(404).send({message:'Not Found',searchTerm})
         }else{
             res.status(200).send(results)
         }
