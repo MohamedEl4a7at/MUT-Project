@@ -121,6 +121,13 @@ doctorSchema.pre('save',async function(){
     }
 })
 
+doctorSchema.pre('save',async function(){
+    if(this.isModified('firstName'||'lastName')){
+        this.fullName= `${this.firstName} ${this.lastName}`
+        // this.confirmPassword = await bcryptjs.hash(this.confirmPassword,8)
+    }
+})
+
 
 doctorSchema.statics.findByCredentials = async(email,password)=>{
     const doctor = await Doctor.findOne({email})

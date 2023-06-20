@@ -8,12 +8,17 @@ const doctorAvailableAppointment = require("../models/doctorAvailableAppointment
 // find by name even if it's first name
 router.get('/getAllDoctors',auth.momAuth,async(req,res)=>{
     try{
-        const regex = new RegExp(req.body.name, "i"); // Create a case-insensitive regular expression
-        const results = await Doctor.find({ fullName: { $regex: regex } });
-        res.send(results)
+        // const regex = new RegExp(req.body.name, "i"); // Create a case-insensitive regular expression
+        const searchTerm = req.body.name;
+        const results = await Doctor.find({ fullName: { $regex: searchTerm, $options: 'i' } });
+        if(results.length == 0){
+            res.status(404).send('Not Found')
+        }else{
+            res.status(200).send(results)
+        }
     }
     catch(err){
-        console.log(err)
+        res.status(400).send(err.message)
     }
 })
 //send Doctor Available Appointments
