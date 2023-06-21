@@ -294,12 +294,14 @@ router.put('/momUnfollow/:id',auth.momAuth,async(req,res)=>{
 /////////////////////////////////////////////////////add score
 router.patch('/addScore',async(req,res)=>{
     try{
-        const mom = await Mom.find({email:req.body.email})
+        const mom = await Mom.findOne({email:req.body.email})
         if(!mom){
             res.status(404).send({message:"User Not Found!"})
+        }else{
+            mom.score = req.body.score
+            await mom.save();
+            res.status(200).send({message:"New Score Added"})
         }
-        mom.score = req.body.score
-        res.status(200).send({message:"New Score Recived"})
     }
     catch(e){
         res.status(400).send(e.message)
@@ -309,21 +311,21 @@ router.patch('/addScore',async(req,res)=>{
 router.post('/gameLogin',async(req,res)=>{
     try{
         const mom = await Mom.findByCredentials(req.body.email,req.body.password)
-        await mom.sava()
         res.status(200).send({mom,message:"Login successful!"})
     }
     catch(e){
         res.status(400).send(e.message)
     }
 })
-////////////////////////////////////////////////GAme Profile
+////////////////////////////////////////////////Game Profile
 router.get('/gameProfile',async(req,res)=>{
     try{
-        const mom = await Mom.find({email:req.body.email})
+        const mom = await Mom.findOne({email:req.body.email})
         if(!mom){
             res.status(404).send({message:"User Not Found!"})
+        }else{
+            res.status(200).send(mom)
         }
-        res.status(200).send(mom)
     }
     catch(e){
         res.status(400).send(e.message)
