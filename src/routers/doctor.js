@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Doctor = require('../models/doctor')
+const Appointment = require('../models/momAppointment')
 const auth = require('../middleware/auth')
 const multer = require('multer')
 const OTP = require('../models/otp')
@@ -191,15 +192,15 @@ router.get('/allDoctors',async(req,res)=>{
 // router.post('/freeAppointments',auth.doctorAuth,async(req,res)=>{
 //     try{
 //     const doctor = await Doctor.findById(req.doctor._id);
-//     // await doctor.updateOne({$push: {availableAppointments: req.body.freeAppointments}});
+//     await doctor.updateOne({$push: {availableAppointments: req.body.freeAppointments}});
 //     await doctor.addAppointment(req.body.freeAppointments)
-//     // await doctor.find({ "availableAppointments": "2023-05-06 5:00" }, (err, docs) => {
-//     //     if (err) {
-//     //       console.error(err);
-//     //     } else {
-//     //       console.log(docs);
-//     //     }
-//     //   });
+//     await doctor.find({ "availableAppointments": "2023-05-06 5:00" }, (err, docs) => {
+//         if (err) {
+//           console.error(err);
+//         } else {
+//           console.log(docs);
+//         }
+//       });
 //     await doctor.save();
 //     res.status(200).send(doctor)
 //     }
@@ -265,4 +266,23 @@ router.get('/allDoctors',async(req,res)=>{
 //         res.status(400).send(err)
 //     }
 // })
+
+////////////////////////////////////////////////doctor clients
+router.get('/clients',auth.doctorAuth,async(req,res)=>{
+    try{
+        const clients = await Appointment.aggregate([
+            { $match : {doctor:req.doctor._id}},
+            { $lookup: {from:"moms",localField:"patient",foreignField:"_id",as:"client"}},
+            { $group : {_id:"$client.fullName",count:{$count: {} }}}
+        ])
+        if(clients.length == 0){
+            res.status(404).send("Sorry You have no clients yet")
+        }else{
+            res.status(200).send(clients)
+        }
+    }
+    catch(e){
+        res.status(400).send(e.message)
+    }
+})
 module.exports = router
