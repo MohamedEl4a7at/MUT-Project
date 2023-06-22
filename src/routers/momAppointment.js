@@ -10,7 +10,8 @@ router.get('/getAllDoctors',auth.momAuth,async(req,res)=>{
     try{
         // const regex = new RegExp(req.body.name, "i"); // Create a case-insensitive regular expression
         const searchTerm = req.body.name;
-        console.log(searchTerm)
+        console.log(req.body)
+        console.log(req.body.name)
         const results = await Doctor.find({ fullName: { $regex: `${searchTerm}`, $options: 'i' } });
         if(results.length == 0){
             res.status(404).send({message:'Not Found',searchTerm})
