@@ -222,9 +222,9 @@ router.post('/resetPassword',async(req,res)=>{
 
 })
 ////////////////////////////////////////////////
-router.post('/password-reset/:id',async(req,res)=>{
+router.post('/password-reset',async(req,res)=>{
     try{
-        const mom = await Mom.findById(req.params.id);
+        const mom = await Mom.findOne({email:req.body.email});
         if(!mom){
           return res.status(400).send('User Not Found')
         }
