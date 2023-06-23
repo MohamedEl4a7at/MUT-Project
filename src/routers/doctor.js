@@ -182,7 +182,7 @@ router.delete('/doctorProfile',auth.doctorAuth,async(req,res)=>{
 router.get('/allDoctors',async(req,res)=>{
     try{
         const doctors = await Doctor.find({})
-        res.status(200).send([doctors[0],doctors[1],doctors[2],doctors[3]])
+        res.status(200).send(doctors)
     }
     catch(e){
         res.status(400).send(e.message)
