@@ -23,10 +23,6 @@
             }else{
             await mom.save();
             }
-            // const otp = randomstring.generate({
-            //     length: 4,
-            //     charset: 'numeric'
-            //   });
             const otp = await new OTP({
                 userId:mom._id,
                 otp:randomstring.generate({
@@ -35,7 +31,6 @@
                   })
             }).save();
 
-            // const url = `${process.env.BASE_URL}/users/${mom._id}/verify/${token.token}`
             await sendEmail(mom.email,"Verify Email",`Your verification OTP is: ${otp.otp}`)
             res.status(200).send({message:"An Email sent to your account please verify",mom})
             
@@ -298,7 +293,8 @@ router.patch('/addScore',async(req,res)=>{
         if(!mom){
             res.status(404).send({message:"User Not Found!"})
         }else{
-            mom.score = req.body.score
+            mom.pekScore = req.body.pekScore
+            mom.edinScore = req.body.edinScore
             await mom.save();
             res.status(200).send({message:"New Score Added"})
         }
@@ -315,7 +311,7 @@ router.post('/gameLogin',async(req,res)=>{
     }
     catch(e){
         res.status(400).send(e.message)
-    }
+    } 
 })
 ////////////////////////////////////////////////Game Profile
 router.get('/gameProfile',async(req,res)=>{

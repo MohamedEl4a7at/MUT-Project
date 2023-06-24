@@ -91,7 +91,11 @@ const momSchema = new mongoose.Schema({
         type:Array,
         default:[]
     },
-    score:{
+    pekScore:{
+        type:Number,
+        default:0
+    },
+    edinScore:{
         type:Number,
         default:0
     }
